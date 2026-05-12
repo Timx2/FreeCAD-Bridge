@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **Platicity_tp_FreeCAD** (162 symbols, 214 relationships, 2 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **FreeCAD-Bridge** (181 symbols, 236 relationships, 2 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -24,10 +24,10 @@ This project is indexed by GitNexus as **Platicity_tp_FreeCAD** (162 symbols, 21
 
 | Resource | Use for |
 |----------|---------|
-| `gitnexus://repo/Platicity_tp_FreeCAD/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/Platicity_tp_FreeCAD/clusters` | All functional areas |
-| `gitnexus://repo/Platicity_tp_FreeCAD/processes` | All execution flows |
-| `gitnexus://repo/Platicity_tp_FreeCAD/process/{name}` | Step-by-step execution trace |
+| `gitnexus://repo/FreeCAD-Bridge/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/FreeCAD-Bridge/clusters` | All functional areas |
+| `gitnexus://repo/FreeCAD-Bridge/processes` | All execution flows |
+| `gitnexus://repo/FreeCAD-Bridge/process/{name}` | Step-by-step execution trace |
 
 ## CLI
 

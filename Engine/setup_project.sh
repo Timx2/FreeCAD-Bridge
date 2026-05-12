@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
-BRIDGE_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_DIR="$(cd "$BRIDGE_DIR/.." && pwd)"
+ENGINE_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(cd "$ENGINE_DIR/.." && pwd)"
 VENV_PYTHON="$PROJECT_DIR/venv/bin/python"
-CONFIG_PATH="$PROJECT_DIR/bridge/config.json"
+CONFIG_PATH="$PROJECT_DIR/Engine/config.json"
 FREECAD_APPIMAGE="/home/uli/squashfs-root/AppRun"
 FREECAD_MACRO_DIR="$HOME/.local/share/FreeCAD/v1-1/Macro"
 
@@ -104,21 +104,21 @@ echo "Location: $PROJECT_PATH"
 echo ""
 
 # 4. Copy bridge files to deployment
-echo "Copying bridge files..."
-mkdir -p "$PROJECT_PATH/bridge"
-cp "$BRIDGE_DIR/import_step.py" "$PROJECT_PATH/bridge/"
-cp "$BRIDGE_DIR/reload_assembly.py" "$PROJECT_PATH/bridge/"
-cp "$BRIDGE_DIR/watcher.py" "$PROJECT_PATH/bridge/"
-cp "$BRIDGE_DIR/start_watcher.sh" "$PROJECT_PATH/bridge/"
-chmod +x "$PROJECT_PATH/bridge/start_watcher.sh"
-echo "  bridge files deployed to: $PROJECT_PATH/bridge/"
+echo "Copying Engine files..."
+mkdir -p "$PROJECT_PATH/Engine"
+cp "$ENGINE_DIR/import_step.py" "$PROJECT_PATH/Engine/"
+cp "$ENGINE_DIR/reload_assembly.py" "$PROJECT_PATH/Engine/"
+cp "$ENGINE_DIR/watcher.py" "$PROJECT_PATH/Engine/"
+cp "$ENGINE_DIR/start_watcher.sh" "$PROJECT_PATH/Engine/"
+chmod +x "$PROJECT_PATH/Engine/start_watcher.sh"
+echo "  Engine files deployed to: $PROJECT_PATH/Engine/"
 echo ""
 
 # 5. Create folder structure
 PROJECT_FOLDER="$PROJECT_PATH"
-PARTS_FOLDER="$PROJECT_PATH/Converted to FreeCAD"
-VERSIONBACKUP_FOLDER="$PROJECT_PATH/VersionBackup"
-STEP_FOLDER="$PROJECT_PATH/step"
+PARTS_FOLDER="$PROJECT_PATH/02 - Converted FreeCAD Parts"
+VERSIONBACKUP_FOLDER="$PROJECT_PATH/03 - Version Backup"
+STEP_FOLDER="$PROJECT_PATH/01 - Drop STEP Files Here"
 
 echo "Creating folders..."
 mkdir -p "$PROJECT_FOLDER"
@@ -153,7 +153,7 @@ cat > "$CONFIG_PATH" <<EOF
   "state_file": "$PROJECT_FOLDER/.import_state.json",
   "freecad_lib": "/home/uli/squashfs-root/usr/lib",
   "freecad_python": "/home/uli/squashfs-root/usr/bin/python",
-  "import_script": "$PROJECT_FOLDER/bridge/import_step.py"
+  "import_script": "$PROJECT_FOLDER/Engine/import_step.py"
 }
 EOF
 
@@ -162,7 +162,7 @@ echo ""
 
 # 9. Install macro to FreeCAD
 mkdir -p "$FREECAD_MACRO_DIR"
-cp "$BRIDGE_DIR/reload_assembly.py" "$FREECAD_MACRO_DIR/"
+cp "$ENGINE_DIR/reload_assembly.py" "$FREECAD_MACRO_DIR/"
 
 echo "Macro installed to: $FREECAD_MACRO_DIR/reload_assembly.py"
 echo ""
@@ -245,24 +245,24 @@ echo "=========================================="
 echo ""
 echo "Folder structure:"
 echo "  $PROJECT_FOLDER/"
-echo "    bridge/          ← Bridge scripts"
-echo "    step/              ← Export Plasticity STEP files here"
-echo "    Converted to FreeCAD/  ← .FCStd files appear here"
-echo "    VersionBackup/     ← Version history + .FCBak backups (up to 3 per part)"
-if [ -d "$PROJECT_FOLDER/Plasticity" ]; then
-echo "    Plasticity/        ← .Plasticity source files"
+echo "    Engine/          ← Core scripts (watcher, converter, config, macro)"
+echo "    01 - Drop STEP Files Here/  ← Export Plasticity STEP files here"
+echo "    02 - Converted FreeCAD Parts/  ← .FCStd files appear here"
+echo "    03 - Version Backup/     ← Version history + .FCBak backups (up to 3 per part)"
+if [ -d "$PROJECT_FOLDER/Plasticity Source" ]; then
+echo "    Plasticity Source/        ← .Plasticity source files"
 fi
-if [ -d "$PROJECT_FOLDER/FreeCAD" ]; then
-echo "    FreeCAD/           ← Extra FreeCAD files"
+if [ -d "$PROJECT_FOLDER/FreeCAD Source" ]; then
+echo "    FreeCAD Source/           ← Extra FreeCAD files"
 fi
 echo "    $PROJECT_NAME.FCStd ← Your FreeCAD assembly (save here)"
 echo ""
 echo "How it works:"
-echo "  1. Export part from Plasticity → step/"
-echo "     → Converted to 'Converted to FreeCAD/' + backed up in VersionBackup/"
-echo "     → File stays in step/ (visible for re-save)"
+echo "  1. Export part from Plasticity → '01 - Drop STEP Files Here/'"
+echo "     → Converted to '02 - Converted FreeCAD Parts/' + backed up in '03 - Version Backup/'"
+echo "     → File stays in '01 - Drop STEP Files Here/' (visible for re-save)"
 echo "  2. Re-save from Plasticity (Ctrl+S)"
-echo "     → Previous version archived in VersionBackup/"
+echo "     → Previous version archived in '03 - Version Backup/'"
 echo "     → .FCStd re-converted, assembly trigger fired"
 echo ""
 echo "Next steps:"
@@ -272,7 +272,7 @@ echo "     → click 'Run' (do this once per FreeCAD session)"
 echo "  2. Create your assembly in the Assembly workbench"
 echo "  3. Add parts from: $PARTS_FOLDER"
 echo "  4. Save assembly as: $ASSEMBLY_FILE"
-echo "  5. Export parts from Plasticity to 'step/' folder"
+echo "  5. Export parts from Plasticity to '01 - Drop STEP Files Here/' folder"
 echo ""
 
 # 12. Ask to start watcher
@@ -285,12 +285,12 @@ if [ "$START_WATCHER" = "y" ] || [ "$START_WATCHER" = "Y" ]; then
     echo "Watching: $WATCH_FOLDER"
     echo ""
     cd "$PROJECT_FOLDER"
-    exec "$VENV_PYTHON" "$PROJECT_FOLDER/bridge/watcher.py"
+    exec "$VENV_PYTHON" "$PROJECT_FOLDER/Engine/watcher.py"
 else
     echo ""
     echo "Watcher not started. Run this to start it manually:"
-    echo "  $PROJECT_FOLDER/bridge/start_watcher.sh"
-    echo ""
-    echo "Or run:"
-    echo "  cd $PROJECT_FOLDER && $VENV_PYTHON bridge/watcher.py"
+echo "  $PROJECT_FOLDER/Engine/start_watcher.sh"
+echo ""
+echo "Or run:"
+echo "  cd $PROJECT_FOLDER && $VENV_PYTHON Engine/watcher.py"
 fi

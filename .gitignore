@@ -5,11 +5,11 @@ __pycache__/
 *.FCStd
 *.step
 *.stp
-VersionBackup/
-Converted to FreeCAD/
-step/
+03 - Version Backup/
+02 - Converted FreeCAD Parts/
+01 - Drop STEP Files Here/
 .reload_trigger
 .import_state.json
-Plasticity/
-FreeCAD/
+Plasticity Source/
+FreeCAD Source/
 .gitnexus
