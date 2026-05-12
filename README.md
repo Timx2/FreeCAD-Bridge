@@ -1,65 +1,40 @@
 # Plasticity → FreeCAD Bridge
 
-Watches a `step/` folder for STEP files exported from **Plasticity 3D**, converts them to `.FCStd` files usable in **FreeCAD**, and triggers automatic assembly reload.
+Automatically converts STEP files exported from **Plasticity 3D** to `.FCStd` files for **FreeCAD** and triggers assembly reload — so you can design in Plasticity and validate assemblies in FreeCAD without manual conversion.
 
-## Getting Started
+## Why This Bridge
 
-### Linux & macOS
+This project was inspired by the existing **Plasticity → Blender Bridge** (a bidirectional WebSocket addon for mesh/sculpt work). That bridge is excellent for **organic modeling, texturing, and rendering** — passing geometry back and forth between Plasticity and Blender in real time.
 
-```bash
-git clone https://github.com/Timx2/FreeCAD-Bridge.git
-cd FreeCAD-Bridge
-python3 -m venv venv
-source venv/bin/activate
-# Run setup — it copies Engine files and creates the project folder
-./Engine/setup_project.sh
+The **FreeCAD Bridge** serves a different purpose: **mechanical design and assembly validation**.
+
+| | Plasticity → Blender Bridge | Plasticity → FreeCAD Bridge |
+|---|---|---|
+| **Direction** | Bidirectional (live WebSocket) | One-directional (file-based watcher) |
+| **Data format** | Mesh (triangles via WebSocket) | NURBS (STEP file → FCStd) |
+| **Purpose** | Sculpting, rendering, texturing | Assembly checking, fit analysis, engineering |
+| **Connection** | Real-time at localhost:8980 | Polls a folder every 2 seconds |
+| **Bidirectional?** | ✅ Send and receive geometry | ❌ Plasticity → FreeCAD only |
+| **State** | Experimental (ZIP addon) | Production-ready (installed system-wide) |
+
+> If you need to sculpt, texture, or render — use the Blender Bridge. If you need to check how parts fit together in an assembly — this FreeCAD Bridge is for you.
+
+## Workflow
+
+```
+Plasticity (design) → Export STEP → Watcher converts to FCStd → FreeCAD reloads assembly
 ```
 
-### Windows
+1. **Design a part in Plasticity 3D** and save it as `.step` into the project's `01 - Drop STEP Files Here/` folder
+2. The **watcher** detects the new file, copies it to `03 - Version Backup/`, converts it to `.FCStd`, and places it in `02 - Converted FreeCAD Parts/`
+3. The watcher writes a **trigger file** that tells the FreeCAD macro to reload the open assembly
+4. In FreeCAD, the **Assembly workbench** reopens the assembly with the updated part — no manual import needed
 
-```powershell
-git clone https://github.com/Timx2/FreeCAD-Bridge.git
-cd FreeCAD-Bridge
-python -m venv venv
-venv\Scripts\activate
-# Run the watcher directly (PowerShell):
-python Engine/watcher.py --once   # one-shot conversion
-python Engine/watcher.py          # continuous watch mode
-
-> **Note:** The `.sh` launcher scripts are Linux/macOS only. On Windows, run `Engine/watcher.py` directly as shown above. The FreeCAD macro (`Engine/reload_assembly.py`) works on all platforms.
-
-## How the Watcher Works
-
-1. **Polling:** The watcher polls `step/` every 2 seconds for new or changed `.step`/`.stp` files.
-
-2. **Save → Convert:** When a STEP file appears (exported from Plasticity), the watcher:
-   - **Copies it to `VersionBackup/`** with a timestamp (`PartName_v20260511_120000.step`)
-   - **Converts it** to `.FCStd` in `parts/` using FreeCAD's `Part.read()`
-   - **Leaves the original file in `step/`** — all part names stay visible in Plasticity's file browser, so you can pick any part to re-save without retyping the name
-   - **Writes a trigger file** that tells the FreeCAD macro to reload the assembly
-
-3. **Re-save (Ctrl+S):** When you save again from Plasticity (same or different part), the watcher:
-   - **Archives the previous version** to `VersionBackup/` (up to 3 versions per part, oldest auto-pruned)
-   - **Re-converts** the updated `.FCStd` in `parts/`
-   - Triggers the assembly reload
-
-4. **VersionBackup Pruning:** Only the 3 most recent versions of each part are kept in `VersionBackup/`. Older versions are automatically deleted.
-
-## IMPORTANT: Run the FreeCAD Macro
-
-For automatic assembly reload to work, you must start the `reload_assembly` macro **once per FreeCAD session**:
-
-1. In FreeCAD, go to **Macro → Macros...**
-2. Select **reload_assembly** → click **Run**
-3. The macro prints `[BridgeReloader] Started` to the report view
-
-This macro watches the trigger file written by the watcher. When a new part is converted, it saves the current assembly, closes it, reopens it, and switches back to the Assembly workbench — so your assembly always reflects the latest parts.
-
-## Folder Structure
+### Folder structure
 
 ```
 Project/
-  Engine/                         ← Core scripts (watcher, converter, config, macro)
+  Engine/                         ← Core scripts (watcher, converter, config, macro, GUI)
   01 - Drop STEP Files Here/      ← Export Plasticity STEP files here
   02 - Converted FreeCAD Parts/   ← .FCStd files appear here
   03 - Version Backup/            ← Version history + .FCBak backups (up to 3 per part)
@@ -70,69 +45,84 @@ Project/
   ProjectName.FCStd               ← Your FreeCAD assembly file
 ```
 
-## Setup
+## Install
 
-From the project root, run `Engine/setup_project.sh` — it will:
+### Linux & macOS
 
-1. Copy Engine scripts to your deployment folder
-2. Ask for a storage disk and project name
-3. Create the folder structure
-4. Install the `reload_assembly` macro to FreeCAD
-5. Offer optional steps:
-   - **Auto-start FreeCAD** with Assembly workbench + macro
-   - Create `Plasticity/` folder
-   - Create `FreeCAD/` folder
-6. Start the watcher
-
-## Usage
-
-```
-step/  ──►  watcher.py  ──►  parts/ (converted .FCStd)
-                  │
-                  ├──►  VersionBackup/ (timestamped copies, max 3)
-                  │
-                  └──►  .reload_trigger ──► FreeCAD macro reloads assembly
+```bash
+git clone https://github.com/Timx2/FreeCAD-Bridge.git
+cd FreeCAD-Bridge
+python3 -m venv venv
+source venv/bin/activate
+./Engine/setup_project.sh
 ```
 
-1. Start the watcher: `Engine/start_watcher.sh` (or `Engine/watcher.py --once` for one-shot)
-2. Export a part from Plasticity as STEP to `step/`
-3. The part appears in `parts/` as `.FCStd` and the assembly auto-reloads
-4. Re-save from Plasticity (Ctrl+S) to archive the previous version and update
-5. All part filenames stay visible in `step/` for easy re-selection
+### Windows
 
-## Bridge Manager (GUI)
-
-For users who prefer not to use the terminal, search your app menu for
-**"FreeCAD Bridge Manager"** or run `Engine/bridge_manager.py`.
-
-The GUI combines project creation and watcher management in one window:
-- **Create New Project** — pick a disk, name your project, optional folders
-- **Project list** — all projects with last-used timestamps
-- **Watcher controls** — start/stop individual watchers or all at once
-- **Open in FreeCAD** — launch FreeCAD with the project's assembly
-- **Delete Project** — remove from the project list
-
-### Watcher Options
-
+```powershell
+git clone https://github.com/Timx2/FreeCAD-Bridge.git
+cd FreeCAD-Bridge
+python -m venv venv
+venv\Scripts\activate
+python Engine/watcher.py              # continuous watch mode
 ```
-watcher.py [--once] [--force] [--interval <seconds>]
 
-  --once        Process all existing STEP files and exit
-  --force       In --once mode, process all files even if unchanged
-  --interval    Polling interval in seconds (default: 2)
+> The `.sh` scripts are Linux/macOS only. On Windows, run `Engine/watcher.py` directly. The FreeCAD macro (`Engine/reload_assembly.py`) works on all platforms.
+
+## Bridge Manager GUI
+
+The Bridge Manager is the main interface — no terminal needed for daily use.
+
+![Bridge Manager](screenshots/FreeCAD_BridgeManager_01.png)
+
+- **Create New Project** — name it, pick a disk, create the full folder structure
+- **Start / Stop watchers** — toggle per project or batch start/stop all
+- **Open in FreeCAD** — launches FreeCAD with Assembly workbench and auto-reload macro
+- **Last used** — shows when each project was last opened
+
+![Bridge Manager — Watcher Manager](screenshots/FreeCAD_BridgeManager_02.png)
+
+**Launch it from your app menu** (search for "FreeCAD Bridge Manager") or run:
+```bash
+./Engine/bridge_manager.py
 ```
+
+## How the Watcher Works
+
+1. **Polling:** Watches the `01 - Drop STEP Files Here/` folder every 2 seconds for new or changed `.step`/`.stp` files
+2. **Version backup:** Copies the file to `03 - Version Backup/` with a timestamp (`PartName_v20260512_120000.step`)
+3. **Conversion:** Converts to `.FCStd` in `02 - Converted FreeCAD Parts/` using FreeCAD's `Part.read()`
+4. **Assembly reload:** Writes a trigger file — the FreeCAD macro saves, closes, and reopens the assembly
+
+> Re-saving the same part from Plasticity archives the previous version (up to 3 kept per part, oldest auto-pruned) and re-converts the updated file.
+
+### One-shot conversion
+
+```bash
+./Engine/watcher.py --once        # process existing STEP files and exit
+./Engine/watcher.py --once --force  # reprocess all, even if unchanged
+```
+
+## FreeCAD Macro: Auto-Reload
+
+For automatic assembly reload, run the `reload_assembly` macro once per FreeCAD session:
+
+1. FreeCAD → **Macro → Macros...**
+2. Select **reload_assembly** → **Run**
+3. You'll see `[BridgeReloader] Started` in the report view
+
+The macro watches the trigger file. When a new part is converted, it saves the assembly, closes it, reopens it, and switches back to the Assembly workbench.
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `Engine/watcher.py` | File watcher daemon — polls step/, converts, backs up, triggers reload |
-| `Engine/import_step.py` | Standalone STEP → FCStd converter (called by watcher) |
+| `Engine/watcher.py` | File watcher daemon — polls, converts, backs up, triggers reload |
+| `Engine/import_step.py` | STEP → FCStd converter (called by watcher) |
 | `Engine/reload_assembly.py` | FreeCAD macro — auto-reloads assembly on trigger |
-| `Engine/setup_project.sh` | Interactive project setup |
+| `Engine/bridge_manager.py` | GUI — create projects, manage watchers (PySide6) |
+| `Engine/setup_project.sh` | Terminal-based project setup |
 | `Engine/start_watcher.sh` | Launcher for the watcher daemon |
-| `Engine/bridge_manager.py` | Unified Project Creator + Watcher Manager GUI (double-click to launch) |
-| `Engine/project_gui.py` | (legacy — replaced by bridge_manager.py) |
 | `Engine/config.json` | Project configuration (paths) |
 | `fix_paths.sh` | Post-disk-rename path fixer |
 | `rename_disks.sh` | Disk label rename utility |

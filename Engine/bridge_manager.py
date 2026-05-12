@@ -427,7 +427,7 @@ class MainWindow(QtWidgets.QWidget):
         proj = self.selected_project()
         if proj:
             self.btn_delete.setEnabled(True)
-            self.btn_open.setEnabled(bool(os.path.isfile(os.path.join(proj["path"], f"{proj['title']}.FCStd"))))
+            self.btn_open.setEnabled(is_watcher_project(proj))
             if is_watcher_project(proj):
                 self.btn_toggle.setEnabled(True)
                 self.btn_toggle.setText("Stop Watcher" if watcher_running(proj) else "Start Watcher")
@@ -591,8 +591,11 @@ def bridge_startup():
 
 QtCore.QTimer.singleShot(3000, bridge_startup)
 ''')
+        args = [FREECAD_APPIMAGE, "-M", init_dir]
+        if os.path.exists(assembly):
+            args.append(assembly)
         try:
-            subprocess.Popen([FREECAD_APPIMAGE, "-M", init_dir, assembly])
+            subprocess.Popen(args)
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Error", f"Failed to launch FreeCAD:\n{e}")
 
