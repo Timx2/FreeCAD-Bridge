@@ -100,6 +100,16 @@ step/  ──►  watcher.py  ──►  parts/ (converted .FCStd)
 4. Re-save from Plasticity (Ctrl+S) to archive the previous version and update
 5. All part filenames stay visible in `step/` for easy re-selection
 
+## Project Manager (GUI)
+
+For users who prefer not to use the terminal, double-click the desktop shortcut
+**"FreeCAD Bridge Manager"** (or run `Engine/project_gui.py`).
+
+The GUI shows all your projects with:
+- **Last used** timestamp (relative: "2 hours ago", "3 days ago")
+- **Watcher status** for Bridge deployments (● running / ○ stopped)
+- **Start All / Stop All** buttons to control all watchers at once
+
 ### Watcher Options
 
 ```
@@ -119,6 +129,7 @@ watcher.py [--once] [--force] [--interval <seconds>]
 | `Engine/reload_assembly.py` | FreeCAD macro — auto-reloads assembly on trigger |
 | `Engine/setup_project.sh` | Interactive project setup |
 | `Engine/start_watcher.sh` | Launcher for the watcher daemon |
+| `Engine/project_gui.py` | Project Manager GUI — start/stop watchers from a graphical window |
 | `Engine/config.json` | Project configuration (paths) |
 | `fix_paths.sh` | Post-disk-rename path fixer |
 | `rename_disks.sh` | Disk label rename utility |
