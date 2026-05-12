@@ -1,0 +1,12 @@
+{
+  "watch_folder": "",
+  "parts_folder": "",
+  "versionbackup_folder": "",
+  "fcbak_folder": "",
+  "reload_trigger_file": "",
+  "assembly_file": "",
+  "state_file": "",
+  "freecad_lib": "/home/uli/squashfs-root/usr/lib",
+  "freecad_python": "/home/uli/squashfs-root/usr/bin/python",
+  "import_script": ""
+}

@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+*.FCStd
+*.step
+*.stp
+VersionBackup/
+parts/
+step/
+.reload_trigger
+.import_state.json
+Plasticity/
+FreeCAD/
