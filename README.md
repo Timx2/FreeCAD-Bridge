@@ -11,8 +11,8 @@ git clone https://github.com/Timx2/FreeCAD-Bridge.git
 cd FreeCAD-Bridge
 python3 -m venv venv
 source venv/bin/activate
-# Edit config.json to point at your FreeCAD install
-./setup_project.sh
+# Run setup — it copies bridge files and creates the project folder
+./bridge/setup_project.sh
 ```
 
 ### Windows
@@ -22,13 +22,12 @@ git clone https://github.com/Timx2/FreeCAD-Bridge.git
 cd FreeCAD-Bridge
 python -m venv venv
 venv\Scripts\activate
-# Edit config.json to point at your FreeCAD install
 # Run the watcher directly (PowerShell):
-python watcher.py --once   # one-shot conversion
-python watcher.py          # continuous watch mode
+python bridge/watcher.py --once   # one-shot conversion
+python bridge/watcher.py          # continuous watch mode
 ```
 
-> **Note:** The `.sh` launcher scripts are Linux/macOS only. On Windows, run `watcher.py` directly as shown above. The FreeCAD macro (`reload_assembly.py`) works on all platforms.
+> **Note:** The `.sh` launcher scripts are Linux/macOS only. On Windows, run `bridge/watcher.py` directly as shown above. The FreeCAD macro (`bridge/reload_assembly.py`) works on all platforms.
 
 ## How the Watcher Works
 
@@ -61,10 +60,10 @@ This macro watches the trigger file written by the watcher. When a new part is c
 
 ```
 Project/
+  bridge/            ← Core bridge scripts (config, watcher, converter, macro)
   step/              ← Export STEP files from Plasticity here
-  parts/             ← Converted .FCStd files land here
-  VersionBackup/     ← Version history (up to 3 per part)
-    fcbak/           ← .FCBak backups auto-moved here
+  Converted to FreeCAD/  ← .FCStd files land here
+  VersionBackup/     ← Version history + .FCBak backups (up to 3 per part)
   Plasticity/        ← [optional] .Plasticity source files
   FreeCAD/           ← [optional] extra FreeCAD files
   .reload_trigger    ← Trigger file for the FreeCAD macro
@@ -74,16 +73,17 @@ Project/
 
 ## Setup
 
-Run `setup_project.sh` — it will:
+From the project root, run `bridge/setup_project.sh` — it will:
 
-1. Ask for a storage disk and project name
-2. Create the folder structure
-3. Install the `reload_assembly` macro to FreeCAD
-4. Offer optional steps:
+1. Copy bridge scripts to your deployment folder
+2. Ask for a storage disk and project name
+3. Create the folder structure
+4. Install the `reload_assembly` macro to FreeCAD
+5. Offer optional steps:
    - **Auto-start FreeCAD** with Assembly workbench + macro
    - Create `Plasticity/` folder
    - Create `FreeCAD/` folder
-5. Start the watcher
+6. Start the watcher
 
 ## Usage
 
@@ -95,7 +95,7 @@ step/  ──►  watcher.py  ──►  parts/ (converted .FCStd)
                   └──►  .reload_trigger ──► FreeCAD macro reloads assembly
 ```
 
-1. Start the watcher: `start_watcher.sh` (or `watcher.py --once` for one-shot)
+1. Start the watcher: `bridge/start_watcher.sh` (or `bridge/watcher.py --once` for one-shot)
 2. Export a part from Plasticity as STEP to `step/`
 3. The part appears in `parts/` as `.FCStd` and the assembly auto-reloads
 4. Re-save from Plasticity (Ctrl+S) to archive the previous version and update
@@ -115,11 +115,11 @@ watcher.py [--once] [--force] [--interval <seconds>]
 
 | File | Purpose |
 |------|---------|
-| `watcher.py` | File watcher daemon — polls step/, converts, backs up, triggers reload |
-| `import_step.py` | Standalone STEP → FCStd converter (called by watcher) |
-| `reload_assembly.py` | FreeCAD macro — auto-reloads assembly on trigger |
-| `setup_project.sh` | Interactive project setup |
-| `start_watcher.sh` | Launcher for the watcher daemon |
+| `bridge/watcher.py` | File watcher daemon — polls step/, converts, backs up, triggers reload |
+| `bridge/import_step.py` | Standalone STEP → FCStd converter (called by watcher) |
+| `bridge/reload_assembly.py` | FreeCAD macro — auto-reloads assembly on trigger |
+| `bridge/setup_project.sh` | Interactive project setup |
+| `bridge/start_watcher.sh` | Launcher for the watcher daemon |
+| `bridge/config.json` | Project configuration (paths) |
 | `fix_paths.sh` | Post-disk-rename path fixer |
 | `rename_disks.sh` | Disk label rename utility |
-| `config.json` | Project configuration (paths) |

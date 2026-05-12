@@ -173,7 +173,8 @@ def process_step(config, state, name, filepath, stat, state_file, versionbackup_
     if success:
         state[name] = {"mtime": stat.st_mtime, "size": stat.st_size}
         save_state(state_file, state)
-        print(f"  Updated parts/{name_no_ext}.FCStd")
+        parts_name = os.path.basename(config.get("parts_folder", "parts"))
+        print(f"  Updated {parts_name}/{name_no_ext}.FCStd")
         print(f"  File remains in step/ for re-save access")
         fcbak_dir_actual = fcbak_dir or os.path.join(versionbackup_dir, "fcbak")
         cleanup_fcbak_files(config["watch_folder"], fcbak_dir_actual)
@@ -247,7 +248,7 @@ def main():
     print(f"Watching: {watch_folder} (polling every {args.interval}s)")
     print(f"Output: .FCStd files saved in: {parts_folder}")
     print(f"Version backup: {versionbackup_dir} (max {MAX_VERSIONS} per part)")
-    print(f"FCBak files moved to: {fcbak_dir or '(VersionBackup/fcbak)'}")
+    print(f"FCBak files moved to: {fcbak_dir or 'VersionBackup'}")
     print("STEP files stay in step/ for re-save access")
     print("Press Ctrl+C to stop.\n")
 

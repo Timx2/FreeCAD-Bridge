@@ -6,7 +6,7 @@ __pycache__/
 *.step
 *.stp
 VersionBackup/
-parts/
+Converted to FreeCAD/
 step/
 .reload_trigger
 .import_state.json
