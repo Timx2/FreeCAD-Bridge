@@ -2,6 +2,34 @@
 
 Watches a `step/` folder for STEP files exported from **Plasticity 3D**, converts them to `.FCStd` files usable in **FreeCAD**, and triggers automatic assembly reload.
 
+## Getting Started
+
+### Linux & macOS
+
+```bash
+git clone https://github.com/Timx2/FreeCAD-Bridge.git
+cd FreeCAD-Bridge
+python3 -m venv venv
+source venv/bin/activate
+# Edit config.json to point at your FreeCAD install
+./setup_project.sh
+```
+
+### Windows
+
+```powershell
+git clone https://github.com/Timx2/FreeCAD-Bridge.git
+cd FreeCAD-Bridge
+python -m venv venv
+venv\Scripts\activate
+# Edit config.json to point at your FreeCAD install
+# Run the watcher directly (PowerShell):
+python watcher.py --once   # one-shot conversion
+python watcher.py          # continuous watch mode
+```
+
+> **Note:** The `.sh` launcher scripts are Linux/macOS only. On Windows, run `watcher.py` directly as shown above. The FreeCAD macro (`reload_assembly.py`) works on all platforms.
+
 ## How the Watcher Works
 
 1. **Polling:** The watcher polls `step/` every 2 seconds for new or changed `.step`/`.stp` files.
