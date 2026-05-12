@@ -100,15 +100,17 @@ step/  ──►  watcher.py  ──►  parts/ (converted .FCStd)
 4. Re-save from Plasticity (Ctrl+S) to archive the previous version and update
 5. All part filenames stay visible in `step/` for easy re-selection
 
-## Project Manager (GUI)
+## Bridge Manager (GUI)
 
-For users who prefer not to use the terminal, double-click the desktop shortcut
-**"FreeCAD Bridge Manager"** (or run `Engine/project_gui.py`).
+For users who prefer not to use the terminal, search your app menu for
+**"FreeCAD Bridge Manager"** or run `Engine/bridge_manager.py`.
 
-The GUI shows all your projects with:
-- **Last used** timestamp (relative: "2 hours ago", "3 days ago")
-- **Watcher status** for Bridge deployments (● running / ○ stopped)
-- **Start All / Stop All** buttons to control all watchers at once
+The GUI combines project creation and watcher management in one window:
+- **Create New Project** — pick a disk, name your project, optional folders
+- **Project list** — all projects with last-used timestamps
+- **Watcher controls** — start/stop individual watchers or all at once
+- **Open in FreeCAD** — launch FreeCAD with the project's assembly
+- **Delete Project** — remove from the project list
 
 ### Watcher Options
 
@@ -129,7 +131,8 @@ watcher.py [--once] [--force] [--interval <seconds>]
 | `Engine/reload_assembly.py` | FreeCAD macro — auto-reloads assembly on trigger |
 | `Engine/setup_project.sh` | Interactive project setup |
 | `Engine/start_watcher.sh` | Launcher for the watcher daemon |
-| `Engine/project_gui.py` | Project Manager GUI — start/stop watchers from a graphical window |
+| `Engine/bridge_manager.py` | Unified Project Creator + Watcher Manager GUI (double-click to launch) |
+| `Engine/project_gui.py` | (legacy — replaced by bridge_manager.py) |
 | `Engine/config.json` | Project configuration (paths) |
 | `fix_paths.sh` | Post-disk-rename path fixer |
 | `rename_disks.sh` | Disk label rename utility |
