@@ -184,6 +184,7 @@ class CreateDialog(QtWidgets.QDialog):
         self.setMinimumWidth(560)
         self.result_path = None
         self.result_title = None
+        self.result_launch = False
         self.build_ui()
 
     def build_ui(self):
@@ -219,12 +220,14 @@ class CreateDialog(QtWidgets.QDialog):
         layout.addWidget(self.path_display)
 
         # Options
-        layout.addWidget(QtWidgets.QLabel("Optional folders:"))
+        layout.addWidget(QtWidgets.QLabel("Optional:"))
         self.opt_plasticity = QtWidgets.QCheckBox("Create Plasticity Source/ folder")
         self.opt_plasticity.setChecked(True)
         layout.addWidget(self.opt_plasticity)
         self.opt_freecad = QtWidgets.QCheckBox("Create FreeCAD Source/ folder")
         layout.addWidget(self.opt_freecad)
+        self.opt_launch_fc = QtWidgets.QCheckBox("Launch FreeCAD after creation (Assembly workbench + auto-reload)")
+        layout.addWidget(self.opt_launch_fc)
 
         layout.addStretch()
 
@@ -273,6 +276,7 @@ class CreateDialog(QtWidgets.QDialog):
 
         self.result_title = title
         self.result_path = project_path
+        self.result_launch = self.opt_launch_fc.isChecked()
         self.accept()
 
 
@@ -353,7 +357,6 @@ class MainWindow(QtWidgets.QWidget):
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.verticalHeader().hide()
         self.table.setSortingEnabled(True)
-        self.table.selectionModel().selectionChanged.connect(self.on_select)
         layout.addWidget(self.table, 1)
 
         # Status bar
@@ -442,6 +445,7 @@ class MainWindow(QtWidgets.QWidget):
         projects = load_projects()
         self.model = ProjectModel(projects, self)
         self.table.setModel(self.model)
+        self.table.selectionModel().selectionChanged.connect(self.on_select)
         self.table.setColumnWidth(0, 200)
         self.table.setColumnWidth(1, 100)
         self.table.setColumnWidth(2, 60)
@@ -463,12 +467,15 @@ class MainWindow(QtWidgets.QWidget):
 
         title = dlg.result_title
         project_path = dlg.result_path
+        launch_fc = dlg.result_launch
         self.setEnabled(False)
         self.status_label.setText(f"  Creating project '{title}'...")
         QtWidgets.QApplication.processEvents()
 
         try:
             self._do_create(title, project_path, dlg.opt_plasticity.isChecked(), dlg.opt_freecad.isChecked())
+            if launch_fc:
+                self._launch_freecad(project_path, title)
             QtWidgets.QMessageBox.information(self, "Success", f"Project '{title}' created successfully.")
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Error", f"Failed to create project:\n{e}")
@@ -557,22 +564,43 @@ class MainWindow(QtWidgets.QWidget):
             delete_project(proj["id"])
             self.refresh()
 
+    def _launch_freecad(self, project_path, title):
+        assembly = os.path.join(project_path, f"{title}.FCStd")
+        project_name_safe = title.replace(" ", "_")
+        init_dir = f"/tmp/freecad_bridge_mod_{project_name_safe}"
+        module_dir = os.path.join(init_dir, "FreeCADBridgeInit")
+        os.makedirs(module_dir, exist_ok=True)
+
+        macro_path = os.path.join(FREECAD_MACRO_DIR, "reload_assembly.py")
+        with open(os.path.join(module_dir, "InitGui.py"), "w") as f:
+            f.write(f'''import FreeCAD as App
+import FreeCADGui as Gui
+import os
+from PySide import QtCore
+
+def bridge_startup():
+    assembly_path = "{assembly}"
+    if os.path.exists(assembly_path) and not App.ActiveDocument:
+        App.openDocument(assembly_path)
+    Gui.activateWorkbench("Assembly")
+    macro_path = "{macro_path}"
+    if os.path.exists(macro_path):
+        exec(compile(open(macro_path).read(), macro_path, 'exec'))
+    import shutil
+    shutil.rmtree("{init_dir}", ignore_errors=True)
+
+QtCore.QTimer.singleShot(3000, bridge_startup)
+''')
+        try:
+            subprocess.Popen([FREECAD_APPIMAGE, "-M", init_dir, assembly])
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, "Error", f"Failed to launch FreeCAD:\n{e}")
+
     def open_freecad(self):
         proj = self.selected_project()
         if not proj:
             return
-        assembly = os.path.join(proj["path"], f"{proj['title']}.FCStd")
-        if os.path.isfile(assembly):
-            try:
-                subprocess.Popen([FREECAD_APPIMAGE, assembly])
-            except Exception as e:
-                QtWidgets.QMessageBox.critical(self, "Error", f"Failed to launch FreeCAD:\n{e}")
-        else:
-            QtWidgets.QMessageBox.information(
-                self, "No Assembly",
-                f"Assembly file not found:\n{assembly}\n\n"
-                "Save your assembly in FreeCAD first."
-            )
+        self._launch_freecad(proj["path"], proj["title"])
 
     def toggle_watcher(self):
         proj = self.selected_project()
