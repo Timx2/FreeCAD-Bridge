@@ -6,6 +6,7 @@ if "CONDA_PREFIX" not in os.environ:
 
 import FreeCAD
 import Part
+import PartDesign
 
 
 def step_to_fcstd(step_path, fcstd_path):
@@ -24,6 +25,10 @@ def step_to_fcstd(step_path, fcstd_path):
         shape = Part.read(step_path)
         part_obj = doc.addObject("Part::Feature", label)
         part_obj.Shape = shape
+
+        body = doc.addObject("PartDesign::Body", "Body")
+        body.Label = "Body"
+        body.addObject(part_obj)
         doc.recompute()
 
         doc.Label = label
