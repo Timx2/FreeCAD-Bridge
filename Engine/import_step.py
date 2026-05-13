@@ -44,13 +44,11 @@ def step_to_fcstd(step_path, fcstd_path):
 
         for i, solid in enumerate(solids):
             name = label if len(solids) == 1 else f"{label}_Part{i+1}"
-            part_obj = doc.addObject("Part::Feature", name)
-            part_obj.Shape = solid
-
             body_name = "Body" if len(solids) == 1 else f"Body_{i+1}"
             body = doc.addObject("PartDesign::Body", body_name)
             body.Label = name
-            body.addObject(part_obj)
+            base_feat = body.newObject("PartDesign::FeatureBase", name)
+            base_feat.Shape = solid
 
         doc.recompute()
         doc.Label = label
