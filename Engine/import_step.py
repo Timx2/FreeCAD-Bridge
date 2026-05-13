@@ -9,6 +9,19 @@ import Part
 import PartDesign
 
 
+def _collect_solids(shape):
+    solids = []
+    if shape.ShapeType == 'Solid':
+        solids.append(shape)
+    elif shape.ShapeType == 'Compound':
+        for s in shape.SubShapes:
+            solids.extend(_collect_solids(s))
+    elif shape.ShapeType in ('CompSolid', 'Shell'):
+        for s in shape.SubShapes:
+            solids.extend(_collect_solids(s))
+    return solids
+
+
 def step_to_fcstd(step_path, fcstd_path):
     if not os.path.exists(step_path):
         print(f"ERROR: STEP file not found: {step_path}", file=sys.stderr)
@@ -23,18 +36,31 @@ def step_to_fcstd(step_path, fcstd_path):
         doc = FreeCAD.newDocument(doc_name)
 
         shape = Part.read(step_path)
-        part_obj = doc.addObject("Part::Feature", label)
-        part_obj.Shape = shape
+        solids = _collect_solids(shape)
 
-        body = doc.addObject("PartDesign::Body", "Body")
-        body.Label = "Body"
-        body.addObject(part_obj)
+        if not solids:
+            print(f"ERROR: No solids found in {basename}", file=sys.stderr)
+            sys.exit(4)
+
+        for i, solid in enumerate(solids):
+            name = label if len(solids) == 1 else f"{label}_Part{i+1}"
+            part_obj = doc.addObject("Part::Feature", name)
+            part_obj.Shape = solid
+
+            body_name = "Body" if len(solids) == 1 else f"Body_{i+1}"
+            body = doc.addObject("PartDesign::Body", body_name)
+            body.Label = name
+            body.addObject(part_obj)
+
         doc.recompute()
-
         doc.Label = label
 
         doc.saveAs(fcstd_path)
-        print(f"Imported: {label} ({part_obj.Shape.ShapeType})")
+        count = len(solids)
+        if count == 1:
+            print(f"Imported: {label} (Solid)")
+        else:
+            print(f"Imported: {label} ({count} solids)")
         print(f"Saved: {os.path.basename(fcstd_path)}")
 
     except Exception as e:
