@@ -33,6 +33,10 @@ def _extract_step_names(step_path):
     return names
 
 
+def _is_default_name(name):
+    return bool(re.match(r'^(Solid|Sheet|Curve|Group)\s+\d+$', name))
+
+
 def step_to_fcstd(step_path, fcstd_path):
     if not os.path.exists(step_path):
         print(f"ERROR: STEP file not found: {step_path}", file=sys.stderr)
@@ -55,8 +59,18 @@ def step_to_fcstd(step_path, fcstd_path):
 
         names = _extract_step_names(step_path)
 
+        # Filter: only renamed solids — skip default names like "Solid 1", "Sheet 3"
+        pairs = []
         for i, solid in enumerate(solids):
             part_name = names[i] if i < len(names) and names[i] else f"Part{i+1}"
+            if not _is_default_name(part_name):
+                pairs.append((part_name, solid))
+
+        if not pairs:
+            print(f"Skipped: {basename} — all solids have default names, none selected.")
+            sys.exit(0)
+
+        for part_name, solid in pairs:
             part_obj = doc.addObject("Part::Feature", part_name)
             part_obj.Shape = solid
             part_obj.Label = part_name
@@ -65,11 +79,13 @@ def step_to_fcstd(step_path, fcstd_path):
         doc.Label = label
 
         doc.saveAs(fcstd_path)
-        count = len(solids)
-        if count == 1:
-            print(f"Imported: {label} (Solid)")
-        else:
-            print(f"Imported: {label} ({count} solids)")
+        skipped = len(solids) - len(pairs)
+        msg = f"Imported: {label} ({len(pairs)} solid"
+        msg += "s" if len(pairs) != 1 else ""
+        msg += ")"
+        if skipped:
+            msg += f", {skipped} default names skipped"
+        print(msg)
         print(f"Saved: {os.path.basename(fcstd_path)}")
 
     except Exception as e:

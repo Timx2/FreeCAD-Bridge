@@ -45,6 +45,20 @@ Project/
   ProjectName.FCStd               ← Your FreeCAD assembly file
 ```
 
+## Exporting from Plasticity
+
+The converter only processes solids with **custom names**. Default-named items ("Solid 1", "Sheet 3", "Curve 2", "Group 5") are automatically skipped — no cleanup needed.
+
+**Policy:** If you want it converted, rename it.
+
+1. **Rename your solids** in Plasticity — right-click → Rename (or double-click the name)
+2. **(Optional) Group them** — create a group, name it, drag your renamed solids inside
+3. **Select for export** — right-click a group → Select All, or multi-select individual solids
+4. **Export** — `Ctrl+Shift+E`, choose a filename (e.g. `Boxes.step`), save to `01 - Drop STEP Files Here/`
+5. **Watcher converts** — only renamed solids become `Part::Feature` objects with their Plasticity names
+
+Group names are not used in the output — only the individual solid names appear in FreeCAD.
+
 ## Install
 
 ### Linux & macOS
