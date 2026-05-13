@@ -492,6 +492,8 @@ class MainWindow(QtWidgets.QWidget):
         os.makedirs(os.path.join(project_path, "01 - Drop STEP Files Here"), exist_ok=True)
         os.makedirs(os.path.join(project_path, "02 - Converted FreeCAD Parts"), exist_ok=True)
         os.makedirs(os.path.join(project_path, "03 - Version Backup"), exist_ok=True)
+        os.makedirs(os.path.join(project_path, "03 - Version Backup", "step backups"), exist_ok=True)
+        os.makedirs(os.path.join(project_path, "03 - Version Backup", "FCBak"), exist_ok=True)
         if with_plasticity:
             os.makedirs(os.path.join(project_path, "Plasticity Source"), exist_ok=True)
         if with_freecad:
@@ -520,8 +522,8 @@ class MainWindow(QtWidgets.QWidget):
         config = {
             "watch_folder": os.path.join(project_path, "01 - Drop STEP Files Here"),
             "parts_folder": os.path.join(project_path, "02 - Converted FreeCAD Parts"),
-            "versionbackup_folder": os.path.join(project_path, "03 - Version Backup"),
-            "fcbak_folder": os.path.join(project_path, "03 - Version Backup"),
+            "versionbackup_folder": os.path.join(project_path, "03 - Version Backup", "step backups"),
+            "fcbak_folder": os.path.join(project_path, "03 - Version Backup", "FCBak"),
             "reload_trigger_file": trigger_path,
             "assembly_file": os.path.join(project_path, f"{title}.FCStd"),
             "state_file": os.path.join(project_path, ".import_state.json"),

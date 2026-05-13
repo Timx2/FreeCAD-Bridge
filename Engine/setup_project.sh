@@ -123,7 +123,8 @@ STEP_FOLDER="$PROJECT_PATH/01 - Drop STEP Files Here"
 echo "Creating folders..."
 mkdir -p "$PROJECT_FOLDER"
 mkdir -p "$PARTS_FOLDER"
-mkdir -p "$VERSIONBACKUP_FOLDER"
+mkdir -p "$VERSIONBACKUP_FOLDER/step backups"
+mkdir -p "$VERSIONBACKUP_FOLDER/FCBak"
 mkdir -p "$STEP_FOLDER"
 
 # 6. Write FreeCAD trigger file
@@ -146,8 +147,8 @@ cat > "$CONFIG_PATH" <<EOF
 {
   "watch_folder": "$WATCH_FOLDER",
   "parts_folder": "$PARTS_FOLDER",
-  "versionbackup_folder": "$VERSIONBACKUP_FOLDER",
-  "fcbak_folder": "$VERSIONBACKUP_FOLDER",
+  "versionbackup_folder": "$VERSIONBACKUP_FOLDER/step backups",
+  "fcbak_folder": "$VERSIONBACKUP_FOLDER/FCBak",
   "reload_trigger_file": "$TRIGGER_FILE",
   "assembly_file": "$ASSEMBLY_FILE",
   "state_file": "$PROJECT_FOLDER/.import_state.json",
