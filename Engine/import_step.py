@@ -22,6 +22,18 @@ def _collect_solids(shape):
     return solids
 
 
+def _extract_step_names(step_path):
+    import re
+    names = []
+    with open(step_path, 'r', errors='replace') as f:
+        content = f.read()
+    for m in re.finditer(r"MANIFOLD_SOLID_BREP\('([^']*)'", content):
+        name = m.group(1)
+        if name and name not in names:
+            names.append(name)
+    return names
+
+
 def step_to_fcstd(step_path, fcstd_path):
     if not os.path.exists(step_path):
         print(f"ERROR: STEP file not found: {step_path}", file=sys.stderr)
@@ -42,13 +54,16 @@ def step_to_fcstd(step_path, fcstd_path):
             print(f"ERROR: No solids found in {basename}", file=sys.stderr)
             sys.exit(4)
 
+        names = _extract_step_names(step_path)
+
         for i, solid in enumerate(solids):
-            name = label if len(solids) == 1 else f"{label}_Part{i+1}"
-            body_name = "Body" if len(solids) == 1 else f"Body_{i+1}"
-            body = doc.addObject("PartDesign::Body", body_name)
-            body.Label = name
-            shape_obj = doc.addObject("Part::Feature", name)
+            part_name = names[i] if i < len(names) else f"Part{i+1}"
+            body_label = label if len(solids) == 1 else f"{label}_{part_name}"
+            body = doc.addObject("PartDesign::Body", f"Body_{i+1}")
+            body.Label = body_label
+            shape_obj = doc.addObject("Part::Feature", f"{body_label}_shape")
             shape_obj.Shape = solid
+            shape_obj.Visibility = False
             body.BaseFeature = shape_obj
 
         doc.recompute()
