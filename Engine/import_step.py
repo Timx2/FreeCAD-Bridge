@@ -1,12 +1,12 @@
 import sys
 import os
+import re
 
 if "CONDA_PREFIX" not in os.environ:
     os.environ["CONDA_PREFIX"] = "/home/uli/squashfs-root/usr"
 
 import FreeCAD
 import Part
-import PartDesign
 
 
 def _collect_solids(shape):
@@ -23,7 +23,6 @@ def _collect_solids(shape):
 
 
 def _extract_step_names(step_path):
-    import re
     names = []
     with open(step_path, 'r', errors='replace') as f:
         content = f.read()
@@ -58,11 +57,9 @@ def step_to_fcstd(step_path, fcstd_path):
 
         for i, solid in enumerate(solids):
             part_name = names[i] if i < len(names) and names[i] else f"Part{i+1}"
-            body = doc.addObject("PartDesign::Body", f"Body_{i+1}")
-            body.Label = part_name
-            base_feat = body.newObject("PartDesign::FeatureBase", part_name)
-            base_feat.Shape = solid
-            body.Tip = base_feat
+            part_obj = doc.addObject("Part::Feature", part_name)
+            part_obj.Shape = solid
+            part_obj.Label = part_name
 
         doc.recompute()
         doc.Label = label
